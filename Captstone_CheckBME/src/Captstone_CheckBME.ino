@@ -77,6 +77,7 @@ void setup() {
   Time.zone(-6);
   sensor.init();
   Particle.syncTime();
+  myStepper.setSpeed(10);
   delay(1000);
   pinMode(airPin, INPUT);
   starttime = millis();
@@ -104,6 +105,7 @@ void setup() {
     }
   //Setup MQTT subscription for onoff feed.
   mqtt.subscribe(&mqttbutton1);
+  mqtt.subscribe(&mqttbuttonClose);
   //mqtt.subscribe(&mqttbutton1);
 }
 
@@ -148,17 +150,15 @@ void loop(){
   buttonOnOff = atoi((char *)mqttbutton1.lastread);
       if (buttonOnOff = 1) { 
       myStepper.step(2048);
-      delay(500); 
       }
       Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed \n", buttonOnOff);
   } 
     if (subscription == &mqttbuttonClose) {
   buttonOnOff2 = atoi((char *)mqttbuttonClose.lastread);
-      if (buttonOnOff = 1) { 
+      if (buttonOnOff2 = 1) { 
       myStepper.step(-2048);
-      delay(500); 
       }
-      Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed \n", buttonOnOff2);
+      Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed2 \n", buttonOnOff2);
   } 
 }
 
