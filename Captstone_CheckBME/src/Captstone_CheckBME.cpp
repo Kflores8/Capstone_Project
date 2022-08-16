@@ -70,7 +70,7 @@ unsigned long starttime;
 unsigned long timems = 60000;
 
 float tempC, pressPA, humidRH, tempF, inHG, currentTempF, lastTemp, lastHG;
-bool status, buttonOnOff, buttonOnOff2; 
+bool status, buttonOnOff, buttonOnOff2, openState; 
 
 Adafruit_SSD1306 display(OLED_RESET);
 Adafruit_BME280 bme;
@@ -119,7 +119,6 @@ void setup() {
   //Setup MQTT subscription for onoff feed.
   mqtt.subscribe(&mqttbutton1);
   mqtt.subscribe(&mqttbuttonClose);
-  //mqtt.subscribe(&mqttbutton1);
 }
 
 void loop(){
@@ -144,16 +143,17 @@ void loop(){
       last = millis();
    }
    if ((millis()-last2)>60000){
-    humidRH > 75; 
-    if (humidRH > 75){
+    if (humidRH > 80 && openState == true){
+    openState = false; 
     myStepper.step(2048);
-    delay(500);
     last2 = millis();
     }
    }
    else{
-    myStepper.step(-2048);
-    delay(500);
+    if (humidRH < 80 && openState == false); {
+      openState = true; 
+      myStepper.step(-2048);
+      }
    }
 
 
@@ -179,10 +179,10 @@ void loop(){
       if(mqtt.Update()) { //if mqtt object (Adafruit.io) is available to receive data
       Serial.printf("Publishing %f to Adafruit.io feed temperature \n",tempF);
       Serial.printf("Publishing %f to Adafruit.io feed humidity \n",humidRH);
-      Serial.printf("Sensor value: %i, \n Quality value: %i to Adafruit.io feed Air Quality\n", airValue);
+      Serial.printf("Sensor value: %i, \n Quality value: %i to Adafruit.io feed Air Quality\n", qualityValue);
       mqtttemperature.publish(tempF);
       mqtthumidity.publish(humidRH);
-      mqttairQuality.publish(airValue);
+      mqttairQuality.publish(qualityValue);
       last3 = millis();
     }
   }
@@ -213,7 +213,7 @@ void readingUpdate(void){
   display.setTextSize(1);  //Draw to scale text
   display.setTextColor(WHITE);
   display.setCursor(10, 30);
-  display.printf("Humidity is %f", airValue);
+  display.printf("Air Quality is %f", qualityValue);
   display.display();
 }
 
@@ -253,15 +253,15 @@ void airQuality() {
   Serial.printf("Sensor value: %i, \n Quality value: %i \n", airValue, qualityValue);
   
   if (qualityValue == AirQualitySensor::FORCE_SIGNAL) {
-    Serial.printf("High pollution! Force signal active.");
+    Serial.println("High pollution! Force signal active.");
   }
   else if (qualityValue == AirQualitySensor::HIGH_POLLUTION) {
-    Serial.printf("High pollution!");
+    Serial.println("High pollution!");
   }
   else if (qualityValue == AirQualitySensor::LOW_POLLUTION) {
-    Serial.printf("Low pollution!");
+    Serial.println("Low pollution!");
   }
   else if (qualityValue == AirQualitySensor::FRESH_AIR) {
-    Serial.printf("Fresh air.");
+    Serial.println("Fresh air.");
   }
 }
