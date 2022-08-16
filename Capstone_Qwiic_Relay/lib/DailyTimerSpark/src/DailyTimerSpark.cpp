@@ -41,6 +41,7 @@ DailyTimer::DailyTimer(byte StartHour, byte StartMinute, byte endHour, byte endM
 bool DailyTimer::begin()
 {
   _state = this->isActive();
+  return true; 
 }
 
 void DailyTimer::setDaysActive(EventDays days)

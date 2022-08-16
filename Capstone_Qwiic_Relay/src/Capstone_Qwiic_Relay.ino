@@ -16,14 +16,14 @@ const bool ON = 0;
 const bool OFF = 1;
 bool timer1_LastState = false;
 
-DailyTimer timer1( 8, 30, 9, 00, WEEKENDS);  // creates with a default fixed start time and end time
+DailyTimer timer1( 11, 20, 11, 25, TUESDAY);  // creates with a default fixed start time and end time
 uint32_t lastUpdateTime = 0;
 
 void setup() {
   timer1.begin();
   Serial.begin(9600);
   pinMode(D7, OUTPUT);
-  //timer1.setDaysActive(WEEKDAYS);    
+  timer1.setDaysActive(WEEKDAYS);    
   relay_init();//initialize the relay
 }
 
@@ -36,7 +36,7 @@ void loop() {
       }
       else{
       digitalWrite(IN1, LOW);//turn on RELAY_1 
-      Serial.println("Drainage Pump is OFF");
+      Serial.printf("Drainage Pump is OFF");
       }
     timer1_LastState = timerState;
     }
