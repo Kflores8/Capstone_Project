@@ -116,9 +116,8 @@ void loop(){
   airQuality();
   Serial.printf("Date and time is %s\n", DateTime.c_str());
   Serial.printf("Time is %s\n", TimeOnly.c_str());
-  
   readingUpdate();
-  display.clearDisplay();
+  //display.clearDisplay();
 
   // Ping MQTT Broker every 2 minutes to keep connection alive
   if ((millis()-last)>120000) {
@@ -187,20 +186,20 @@ void readingUpdate(void){
   display.setTextSize(1);  //Draw to scale text
   display.setTextColor(WHITE);
   display.setCursor(10, 10);
-  display.printf("Temp is %f", tempF);
+  display.printf("Temp is %0.2f", tempF);
   display.display();
   delay(5000);
 
   display.setTextSize(1);  //Draw to scale text
   display.setTextColor(WHITE);
   display.setCursor(10, 20);
-  display.printf("Humidity is %f", humidRH);
+  display.printf("Humidity is %0.2f", humidRH);
   display.display();
   
   display.setTextSize(1);  //Draw to scale text
   display.setTextColor(WHITE);
   display.setCursor(10, 30);
-  display.printf("Air Quality is %f", qualityValue);
+  display.printf("Air Quality is %0.2f", qualityValue);
   display.display();
 }
 
