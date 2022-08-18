@@ -42,7 +42,6 @@ Adafruit_MQTT_Publish mqttsensorTemp = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME
 //Adafruit_MQTT_Subscribe mqttbuttonClose = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/buttonfeed4");
 /************Declare Variables*************/
 
-SYSTEM_MODE(SEMI_AUTOMATIC); 
 
 DS18 sensor(A5);
 
@@ -93,6 +92,7 @@ void setup() {
   pinMode(waterPump, OUTPUT);
   pinMode(A5, OUTPUT);
   digitalWrite(A5, HIGH);
+  relay_SetStatus(OFF, OFF, OFF, OFF);
   Serial.printf("%i, %i, %i\n", Time.weekday(), Time.hour(), Time.minute());
 }
 
@@ -108,24 +108,30 @@ MQTT_connect();  // Ping MQTT Broker every 2 minutes to keep connection alive
    }
 
    //************** Setting up each relay on a timer using Particle Sync Time **************//
-    relay_SetStatus(OFF,OFF,OFF,OFF);//turn off every relay
 
-    if (Time.weekday() == 4 && Time.hour() == 12 && Time.minute() == 00) {
+    if (Time.weekday() == 4 && Time.hour() == 15 && Time.minute() == 05) {
         digitalWrite(IN1, LOW);//turn on RELAY 
         digitalWrite(IN2, LOW);//turn on RELAY
         digitalWrite(IN3, LOW);//turn on RELAY
         digitalWrite(IN4, LOW);//turn on RELAY
         Serial.printf("Drainage Pump is ON, %i, %i, %i\n", Time.weekday(), Time.hour(), Time.minute());
     }
-      if (Time.weekday() == 4 && Time.hour() == 12 && Time.minute() == 01){
+      if (Time.weekday() == 4 && Time.hour() == 15 && Time.minute() == 06){
         digitalWrite(IN1, HIGH);//turn off RELAY
         digitalWrite(IN2, HIGH);//turn off RELAY  
         digitalWrite(IN3, HIGH);//turn off RELAY
         digitalWrite(IN4, HIGH);//turn off RELAY
         digitalWrite(waterPump, HIGH);
-        delay (4000);
+        delay (10000);
         digitalWrite(waterPump, LOW);
           Serial.printf("Drainage Pump is OFF\n");
+      }
+
+        if (Time.weekday() == 4 && Time.hour() == 15 && Time.minute() == 06){
+        digitalWrite(waterPump, HIGH);
+        delay (20000);
+        digitalWrite(waterPump, LOW);
+         Serial.printf("Drainage Pump is OFF\n");
       }
 
   //************** Reading Total Disolved Solids and pushing to the Dashboard **************//
@@ -181,7 +187,20 @@ MQTT_connect();  // Ping MQTT Broker every 2 minutes to keep connection alive
         last3 = millis();
         }
       }
+
+      while (tdsValue > 500){
+        digitalWrite(IN1, LOW);//turn off RELAY
+        digitalWrite(IN2, LOW);//turn off RELAY  
+        digitalWrite(IN3, HIGH);//turn off RELAY
+        digitalWrite(IN4, HIGH);//turn off RELAY
+      if ((millis() - lastTime) > 600000){
+        digitalWrite(IN1, HIGH);//turn off RELAY
+        digitalWrite(IN2, HIGH);//turn off RELAY  
+        digitalWrite(IN3, LOW);//turn off RELAY
+        digitalWrite(IN4, LOW);//turn off RELAY
+      }
     } 
+}
 
 
 //set the status of relays
@@ -248,7 +267,7 @@ void printDebugInfo() {
 }
 
 // Function to connect and reconnect as necessary to the MQTT server.
-void MQTT_connect() {
+void MQTT_connect(){
   int8_t ret;
   // Stop if already connected.
   if (mqtt.connected()) {

@@ -39,29 +39,17 @@ void setup() {
 }
 
 void loop() {
-  bool timerState = timer1.isActive();  //State Change method this block
-    if(timerState != timer1_LastState) {
-      if(timerState){
-      digitalWrite(IN1, HIGH);//turn on RELAY_1 
-      Serial.printf("Drainage Pump is ON");
-      }
-      else{
-      digitalWrite(IN1, LOW);//turn on RELAY_1 
-      Serial.printf("Drainage Pump is OFF");
-      }
-    timer1_LastState = timerState;
-    }
-}
 
-  // relay_SetStatus(ON, OFF, OFF,OFF);//turn on RELAY_1 
-  // delay(2000);//delay 2s
-  // relay_SetStatus(OFF, ON, OFF,OFF);//turn on RELAY_2
-  // delay(2000);//delay 2s
-  // relay_SetStatus(OFF, OFF, ON,OFF);//turn on RELAY_3
-  // delay(2000);//delay 2s
-  // relay_SetStatus(OFF, OFF, OFF,ON);//turn on RELAY_3
-  // delay(2000);//delay 2s
-//}
+
+  relay_SetStatus(ON, OFF, OFF,OFF);//turn on RELAY_1 
+  delay(2000);//delay 2s
+  relay_SetStatus(OFF, ON, OFF,OFF);//turn on RELAY_2
+  delay(2000);//delay 2s
+  relay_SetStatus(OFF, OFF, ON,OFF);//turn on RELAY_3
+  delay(2000);//delay 2s
+  relay_SetStatus(OFF, OFF, OFF,ON);//turn on RELAY_3
+  delay(2000);//delay 2s
+}
 
 
 void relay_init(void)//initialize the relay
