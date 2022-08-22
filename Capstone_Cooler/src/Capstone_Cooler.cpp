@@ -64,6 +64,7 @@ const bool OFF = 1;
 unsigned long last, last2, last3, lastTime;
 float averageVoltage = 0, tdsValue = 0, temperature = 25;
 bool timer1_LastState = false;
+bool drainState; 
 String DateTime , TimeOnly;
 
 
@@ -187,20 +188,27 @@ MQTT_connect();  // Ping MQTT Broker every 2 minutes to keep connection alive
         last3 = millis();
         }
       }
-
-      while (tdsValue > 500){
+tdsValue = 600;
+      if (tdsValue > 500 && drainState == false){
+        drainState = true; 
+        lastTime = millis(); 
         digitalWrite(IN1, LOW);//turn off RELAY
         digitalWrite(IN2, LOW);//turn off RELAY  
         digitalWrite(IN3, HIGH);//turn off RELAY
         digitalWrite(IN4, HIGH);//turn off RELAY
-      if ((millis() - lastTime) > 600000){
-        digitalWrite(IN1, HIGH);//turn off RELAY
-        digitalWrite(IN2, HIGH);//turn off RELAY  
-        digitalWrite(IN3, LOW);//turn off RELAY
-        digitalWrite(IN4, LOW);//turn off RELAY
-      }
-    } 
-}
+        Serial.printf("Drainage on");
+      }  
+        if ((millis() - lastTime) > 600000 && drainState == true){
+          tdsValue = 400;
+          digitalWrite(IN1, HIGH);//turn off RELAY
+          digitalWrite(IN2, HIGH);//turn off RELAY  
+          digitalWrite(IN3, LOW);//turn off RELAY
+          digitalWrite(IN4, LOW);//turn off RELAY
+          drainState = false; 
+          Serial.printf("Drainage off");
+        }
+} 
+
 
 
 //set the status of relays
