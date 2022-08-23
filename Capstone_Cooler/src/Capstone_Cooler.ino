@@ -25,8 +25,11 @@ Adafruit_MQTT_SPARK mqtt(&TheClient,AIO_SERVER,AIO_SERVERPORT,AIO_USERNAME,AIO_K
 // Notice MQTT paths for AIO follow the form: <username>/feeds/<feedname> 
 Adafruit_MQTT_Publish mqtttds = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/TDS");
 Adafruit_MQTT_Publish mqttsensorTemp = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/fanTemp");
-//Adafruit_MQTT_Subscribe mqttbutton1 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/buttonfeed3");
-//Adafruit_MQTT_Subscribe mqttbuttonClose = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/buttonfeed4");
+Adafruit_MQTT_Subscribe mqttselfClean = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/cleanButton");
+Adafruit_MQTT_Subscribe mqttselfCleanOff = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/cleanButtonOff");
+Adafruit_MQTT_Subscribe mqttswampON = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/swampButton");
+Adafruit_MQTT_Subscribe mqttswampOff = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/swampButtonOff");
+Adafruit_MQTT_Subscribe mqttfluidPump = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/fluidOnOff");
 /************Declare Variables*************/
 
 
@@ -51,7 +54,7 @@ const bool OFF = 1;
 unsigned long last, last2, last3, lastTime;
 float averageVoltage = 0, tdsValue = 0, temperature = 25;
 bool timer1_LastState = false;
-bool drainState; 
+bool drainState, buttonOnOff, buttonOnOff2, buttonOnOff3, buttonOnOff4; 
 String DateTime , TimeOnly;
 
 
@@ -66,21 +69,26 @@ void setup() {
     while (WiFi.connecting()){
       Serial.printf(".");
     }
-
-  //Setup MQTT subscription for onoff feed.
-  //mqtt.subscribe(&mqttbutton1);
-  //mqtt.subscribe(&mqttbuttonClose);
+//Setup MQTT subscription for onoff feed.
+  mqtt.subscribe(&mqttselfClean);
+  mqtt.subscribe(&mqttselfCleanOff);
+  mqtt.subscribe(&mqttswampON);
+  mqtt.subscribe(&mqttswampOff);
+  mqtt.subscribe(&mqttfluidPump);
 
   Serial.begin(115200);
   pinMode(TdsSensorPin, INPUT);  //TDS initialized
-  pinMode(IN1, OUTPUT); //relay output 1 initialized
-  pinMode(IN2, OUTPUT); //relay output 2 initialized
-  pinMode(IN3, OUTPUT); //relay output 3 initialized
-  pinMode(IN4, OUTPUT); //relay output 4 initialized
+  pinMode(IN1, OUTPUT); //relay output 1 initialized for Solenoid
+  pinMode(IN2, OUTPUT); //relay output 2 initialized for Water Pump
+  pinMode(IN3, OUTPUT); //relay output 3 initialized for Drainage Pump
+  pinMode(IN4, OUTPUT); //relay output 4 initialized for Fan
   pinMode(waterPump, OUTPUT);
   pinMode(A5, OUTPUT);
   digitalWrite(A5, HIGH);
-  relay_SetStatus(OFF, OFF, OFF, OFF);
+        digitalWrite(IN1, HIGH);//turn on RELAY 
+        digitalWrite(IN2, LOW);//turn on RELAY
+        digitalWrite(IN3, HIGH);//turn on RELAY
+        digitalWrite(IN4, LOW);//turn on RELAY
   Serial.printf("%i, %i, %i\n", Time.weekday(), Time.hour(), Time.minute());
 }
 
@@ -95,20 +103,79 @@ MQTT_connect();  // Ping MQTT Broker every 2 minutes to keep connection alive
       last = millis();
    }
 
+   // Ping MQTT Broker every 2 minutes to keep connection alive
+  if ((millis()-last)>120000) {
+      Serial.printf("Pinging MQTT \n");
+      if(! mqtt.ping()) {
+        Serial.printf("Disconnecting \n");
+        mqtt.disconnect();
+      }
+      last = millis();
+   }
+
+   //************** Setting up each relay on a button via the Adafruit dashboard **************//
+
+  Adafruit_MQTT_Subscribe *subscription; //via Adafruit Dashboard, manually open floor register.
+  while ((subscription = mqtt.readSubscription(1000))) {
+  if (subscription == &mqttselfClean) {
+  buttonOnOff = atoi((char *)mqttselfClean.lastread);
+      if (buttonOnOff = 1) { 
+        digitalWrite(IN1, LOW);//turn on RELAY 
+        digitalWrite(IN3, LOW);//turn on RELAY
+      }
+      Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed \n", buttonOnOff);
+  } 
+    if (subscription == &mqttselfCleanOff) {
+  buttonOnOff2 = atoi((char *)mqttselfCleanOff.lastread);
+      if (buttonOnOff2 = 1) { 
+        digitalWrite(IN1, HIGH);//turn off RELAY
+        digitalWrite(IN3, HIGH);//turn off RELAY
+      }
+      Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed2 \n", buttonOnOff2);
+  } 
+}
+  if (subscription == &mqttswampON) {
+  buttonOnOff3 = atoi((char *)mqttswampON.lastread);
+      if (buttonOnOff3 = 1) { 
+        digitalWrite(IN2, LOW);//turn on RELAY 
+        digitalWrite(IN4, LOW);//turn on RELAY
+      }
+      Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed \n", buttonOnOff3);
+  } 
+    if (subscription == &mqttswampOff) {
+  buttonOnOff3 = atoi((char *)mqttswampOff.lastread);
+      if (buttonOnOff3 = 0) { 
+        digitalWrite(IN2, HIGH);//turn off RELAY
+        digitalWrite(IN4, HIGH);//turn off RELAY
+      }
+      Serial.printf("Recieved %i from Adafruit.io feed ButtonFeed2 \n", buttonOnOff3);
+  } 
+    if (subscription == &mqttfluidPump) {
+  buttonOnOff4 = atoi((char *)mqttfluidPump.lastread);
+      if (buttonOnOff4 = 1) { 
+          digitalWrite(waterPump, HIGH);
+          delay (5000);
+          digitalWrite(waterPump, LOW);
+         Serial.printf("Fluid Pump\n");
+      }
+      Serial.printf("Recieved %i from Adafruit.io feed  \n", buttonOnOff4);
+  } 
+
+
    //************** Setting up each relay on a timer using Particle Sync Time **************//
 
     if (Time.weekday() == 4 && Time.hour() == 15 && Time.minute() == 05) {
         digitalWrite(IN1, LOW);//turn on RELAY 
-        digitalWrite(IN2, LOW);//turn on RELAY
+        digitalWrite(IN2, HIGH);//turn on RELAY
         digitalWrite(IN3, LOW);//turn on RELAY
-        digitalWrite(IN4, LOW);//turn on RELAY
+        digitalWrite(IN4, HIGH);//turn on RELAY
         Serial.printf("Drainage Pump is ON, %i, %i, %i\n", Time.weekday(), Time.hour(), Time.minute());
     }
       if (Time.weekday() == 4 && Time.hour() == 15 && Time.minute() == 06){
         digitalWrite(IN1, HIGH);//turn off RELAY
-        digitalWrite(IN2, HIGH);//turn off RELAY  
+        digitalWrite(IN2, LOW);//turn off RELAY  
         digitalWrite(IN3, HIGH);//turn off RELAY
-        digitalWrite(IN4, HIGH);//turn off RELAY
+        digitalWrite(IN4, LOW);//turn off RELAY
         digitalWrite(waterPump, HIGH);
         delay (10000);
         digitalWrite(waterPump, LOW);
@@ -117,9 +184,9 @@ MQTT_connect();  // Ping MQTT Broker every 2 minutes to keep connection alive
 
         if (Time.weekday() == 4 && Time.hour() == 15 && Time.minute() == 06){
         digitalWrite(waterPump, HIGH);
-        delay (20000);
+        delay (5000);
         digitalWrite(waterPump, LOW);
-         Serial.printf("Drainage Pump is OFF\n");
+         Serial.printf("Fluid Pump\n");
       }
 
   //************** Reading Total Disolved Solids and pushing to the Dashboard **************//
@@ -175,7 +242,7 @@ MQTT_connect();  // Ping MQTT Broker every 2 minutes to keep connection alive
         last3 = millis();
         }
       }
-tdsValue = 600;
+
       if (tdsValue > 500 && drainState == false){
         drainState = true; 
         lastTime = millis(); 
@@ -186,7 +253,6 @@ tdsValue = 600;
         Serial.printf("Drainage on");
       }  
         if ((millis() - lastTime) > 600000 && drainState == true){
-          tdsValue = 400;
           digitalWrite(IN1, HIGH);//turn off RELAY
           digitalWrite(IN2, HIGH);//turn off RELAY  
           digitalWrite(IN3, LOW);//turn off RELAY

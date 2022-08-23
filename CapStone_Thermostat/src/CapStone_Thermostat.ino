@@ -17,6 +17,7 @@
 #include "math.h"
 #include "Stepper.h"
 
+
 /************mapping my Stepper motor ***************/
 Stepper myStepper(2048, D6, D4, D5, D3);
 
@@ -37,7 +38,6 @@ Adafruit_MQTT_Subscribe mqttbutton1 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAM
 Adafruit_MQTT_Subscribe mqttbuttonClose = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/buttonfeed2");
 /************Declare Variables*************/
 unsigned long last, last2, last3, lastTime, timer2;
-SYSTEM_MODE(SEMI_AUTOMATIC);
 byte count, i; //8-bit integer that goes from 0 to 255
 
 int airPin = A0;

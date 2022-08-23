@@ -23,6 +23,7 @@
 #include "math.h"
 #include "Stepper.h"
 
+
 /************mapping my Stepper motor ***************/
 void setup();
 void loop();
@@ -30,7 +31,7 @@ void MQTT_connect();
 void checkBME (void);
 void airQuality();
 void readingUpdate(void);
-#line 21 "/Users/Brosana/Documents/IoT/Capstone_Project/CapStone_Thermostat/src/CapStone_Thermostat.ino"
+#line 22 "/Users/Brosana/Documents/IoT/Capstone_Project/CapStone_Thermostat/src/CapStone_Thermostat.ino"
 Stepper myStepper(2048, D6, D4, D5, D3);
 
 /************ Global State (you don't need to change this!) ***   ***************/ 
@@ -50,7 +51,6 @@ Adafruit_MQTT_Subscribe mqttbutton1 = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAM
 Adafruit_MQTT_Subscribe mqttbuttonClose = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/buttonfeed2");
 /************Declare Variables*************/
 unsigned long last, last2, last3, lastTime, timer2;
-SYSTEM_MODE(SEMI_AUTOMATIC);
 byte count, i; //8-bit integer that goes from 0 to 255
 
 int airPin = A0;
